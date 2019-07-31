@@ -1,7 +1,9 @@
 package mapreduce
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -226,3 +228,34 @@ func TestManyFailures(t *testing.T) {
 		}
 	}
 }
+
+/// --------------------- test json encode and decode ---------------
+type person struct {
+	Name     string
+	Age      int
+	Children []person
+}
+
+func TestJSON(t *testing.T) {
+	var parr []person
+	parr = append(parr, person{"name1", 1, nil})
+	parr = append(parr, person{"name2", 2, nil})
+	p := person{"peter", 10, parr}
+	b, err := json.Marshal(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("b: %s", b)
+
+	var np person
+	if err := json.Unmarshal(b, &np); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("np: %+v", np)
+
+	if !reflect.DeepEqual(p, np) {
+		t.Fatalf("expect %+v == %+v", p, np)
+	}
+}
+
+/// --------------------- test json encode and decode end---------------

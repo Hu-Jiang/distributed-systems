@@ -1,5 +1,14 @@
 package mapreduce
 
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"sort"
+)
+
 func doReduce(
 	jobName string, // the name of the whole MapReduce job
 	reduceTask int, // which reduce task this is
@@ -44,4 +53,63 @@ func doReduce(
 	//
 	// Your code here (Part I).
 	//
+
+	/// 1. read all content from intermediate file.
+	/// 2. decode it and sort.
+	/// 3. call reduceF() defined by user then write result to output file.
+
+	var kvs KeyValueSlice
+	for i := 0; i < nMap; i++ {
+		fname := reduceName(jobName, i, reduceTask)
+		f, err := os.Open(fname)
+		defer f.Close()
+		if err != nil {
+			log.Fatalf("open file %s: %v", fname, err)
+		}
+		dec := json.NewDecoder(f)
+
+		for {
+			var kv KeyValue
+			if err := dec.Decode(&kv); err != nil {
+				if err != io.EOF {
+					fmt.Printf("decode file %s: %v\n", fname, err)
+				}
+				break
+			}
+			kvs = append(kvs, &kv)
+		}
+	}
+
+	if len(kvs) <= 0 {
+		fmt.Println("not found any keyvalue")
+		return
+	}
+
+	sort.Sort(kvs)
+
+	f, err := os.Create(outFile)
+	if err != nil {
+		log.Fatalf("create file %s: %v", outFile, err)
+	}
+	defer f.Close()
+	enc := json.NewEncoder(f)
+
+	prevKey := kvs[0].Key
+	values := []string{kvs[0].Value}
+	for i := 1; i < len(kvs); i++ {
+		if kvs[i].Key != prevKey {
+			enc.Encode(KeyValue{prevKey, reduceF(prevKey, values)})
+			prevKey = kvs[i].Key
+			values = nil
+		}
+		values = append(values, kvs[i].Value)
+	}
+	enc.Encode(KeyValue{prevKey, reduceF(prevKey, values)})
 }
+
+/// KeyValue implement sort.Interface
+type KeyValueSlice []*KeyValue
+
+func (p KeyValueSlice) Len() int           { return len(p) }
+func (p KeyValueSlice) Less(i, j int) bool { return p[i].Key < p[j].Key }
+func (p KeyValueSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
