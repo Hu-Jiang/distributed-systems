@@ -1,4 +1,5 @@
-pkg/
+/.vscode
+/pkg/
 api.key
 *-handin.tar.gz
-lab.md
+/lab.md
