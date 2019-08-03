@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"sort"
 )
 
 func doReduce(
@@ -55,10 +54,10 @@ func doReduce(
 	//
 
 	/// 1. read all content from intermediate file.
-	/// 2. decode it and sort.
+	/// 2. decode it and collect the values of the same key.
 	/// 3. call reduceF() defined by user then write result to output file.
 
-	var kvs KeyValueSlice
+	keyValues := make(map[string][]string)
 	for i := 0; i < nMap; i++ {
 		fname := reduceName(jobName, i, reduceTask)
 		f, err := os.Open(fname)
@@ -76,16 +75,14 @@ func doReduce(
 				}
 				break
 			}
-			kvs = append(kvs, &kv)
+			keyValues[kv.Key] = append(keyValues[kv.Key], kv.Value)
 		}
 	}
 
-	if len(kvs) <= 0 {
+	if len(keyValues) <= 0 {
 		fmt.Println("not found any keyvalue")
 		return
 	}
-
-	sort.Sort(kvs)
 
 	f, err := os.Create(outFile)
 	if err != nil {
@@ -94,22 +91,7 @@ func doReduce(
 	defer f.Close()
 	enc := json.NewEncoder(f)
 
-	prevKey := kvs[0].Key
-	values := []string{kvs[0].Value}
-	for i := 1; i < len(kvs); i++ {
-		if kvs[i].Key != prevKey {
-			enc.Encode(KeyValue{prevKey, reduceF(prevKey, values)})
-			prevKey = kvs[i].Key
-			values = nil
-		}
-		values = append(values, kvs[i].Value)
+	for key, values := range keyValues {
+		enc.Encode(KeyValue{key, reduceF(key, values)})
 	}
-	enc.Encode(KeyValue{prevKey, reduceF(prevKey, values)})
 }
-
-/// KeyValue implement sort.Interface
-type KeyValueSlice []*KeyValue
-
-func (p KeyValueSlice) Len() int           { return len(p) }
-func (p KeyValueSlice) Less(i, j int) bool { return p[i].Key < p[j].Key }
-func (p KeyValueSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
