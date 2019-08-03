@@ -1,6 +1,7 @@
 package mapreduce
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -65,7 +66,8 @@ func doReduce(
 		if err != nil {
 			log.Fatalf("open file %s: %v", fname, err)
 		}
-		dec := json.NewDecoder(f)
+		r := bufio.NewReader(f)
+		dec := json.NewDecoder(r)
 
 		for {
 			var kv KeyValue
@@ -89,7 +91,9 @@ func doReduce(
 		log.Fatalf("create file %s: %v", outFile, err)
 	}
 	defer f.Close()
-	enc := json.NewEncoder(f)
+	w := bufio.NewWriter(f)
+	defer w.Flush()
+	enc := json.NewEncoder(w)
 
 	for key, values := range keyValues {
 		enc.Encode(KeyValue{key, reduceF(key, values)})

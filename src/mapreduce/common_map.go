@@ -1,6 +1,7 @@
 package mapreduce
 
 import (
+	"bufio"
 	"encoding/json"
 	"hash/fnv"
 	"io/ioutil"
@@ -73,10 +74,12 @@ func doMap(
 		fname := reduceName(jobName, mapTask, r)
 		f, err := os.Create(fname)
 		defer f.Close()
+		w := bufio.NewWriter(f)
+		defer w.Flush()
 		if err != nil {
 			log.Fatalf("create file %s: %v", fname, err)
 		}
-		encoders = append(encoders, json.NewEncoder(f))
+		encoders = append(encoders, json.NewEncoder(w))
 	}
 
 	kvs := mapF(inFile, string(contents))
