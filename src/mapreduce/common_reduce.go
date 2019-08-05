@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 )
 
 func doReduce(
@@ -95,7 +96,13 @@ func doReduce(
 	defer w.Flush()
 	enc := json.NewEncoder(w)
 
-	for key, values := range keyValues {
-		enc.Encode(KeyValue{key, reduceF(key, values)})
+	var keys []string
+	for k := range keyValues {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		enc.Encode(KeyValue{k, reduceF(k, keyValues[k])})
 	}
 }
