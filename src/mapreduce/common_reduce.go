@@ -82,11 +82,6 @@ func doReduce(
 		}
 	}
 
-	if len(keyValues) <= 0 {
-		fmt.Println("not found any keyvalue")
-		return
-	}
-
 	f, err := os.Create(outFile)
 	if err != nil {
 		log.Fatalf("create file %s: %v", outFile, err)

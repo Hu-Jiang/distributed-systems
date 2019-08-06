@@ -28,7 +28,7 @@ type Master struct {
 
 	shutdown chan struct{}
 	l        net.Listener
-	stats    []int
+	stats    []int /// how many RPCs they have processed when task done
 }
 
 // Register is an RPC method that is called by workers after they have started

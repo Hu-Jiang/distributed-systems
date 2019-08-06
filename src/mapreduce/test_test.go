@@ -36,6 +36,7 @@ func MapFunc(file string, value string) (res []KeyValue) {
 }
 
 // Just return key
+/// result is key -> ""
 func ReduceFunc(key string, values []string) string {
 	for _, e := range values {
 		debug("Reduce %s %v\n", key, e)
@@ -230,6 +231,7 @@ func TestManyFailures(t *testing.T) {
 }
 
 /// --------------------- test json encode and decode ---------------
+
 type person struct {
 	Name     string
 	Age      int
