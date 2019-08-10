@@ -58,22 +58,16 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 	}()
 
 	for i := 0; i < ntasks; i++ {
-		var (
-			file          string
-			numOtherPhase int
-		)
+		var file string
 		if phase == mapPhase {
 			file = mapFiles[i]
-			numOtherPhase = nReduce
-		} else {
-			numOtherPhase = len(mapFiles)
 		}
 		args := &DoTaskArgs{
 			JobName:       jobName,
 			File:          file,
 			Phase:         phase,
 			TaskNumber:    i,
-			NumOtherPhase: numOtherPhase,
+			NumOtherPhase: n_other,
 		}
 
 		wg.Add(1)
