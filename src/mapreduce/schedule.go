@@ -40,22 +40,7 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 	/// 3. Use channel wait for a worker to finish before it can give it another task.
 	/// 4. Use sync.Watigroup to wait all goroutine done.
 
-	var (
-		wg          sync.WaitGroup
-		idleWorkers = make(chan string, 1<<10)
-	)
-
-	go func() {
-		for {
-			workerAddr := <-registerChan
-
-			select {
-			case idleWorkers <- workerAddr:
-			default:
-				fmt.Printf("too many workers, drop worker %s\n", workerAddr)
-			}
-		}
-	}()
+	var wg sync.WaitGroup
 
 	for i := 0; i < ntasks; i++ {
 		var file string
@@ -72,16 +57,26 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
-			workerAddr := <-idleWorkers
+			workerAddr := <-registerChan
 			ok := call(workerAddr, "Worker.DoTask", args, new(struct{}))
 			if ok == false {
 				log.Fatalf("DoTask: RPC %s DoTask error", workerAddr)
 			}
-			idleWorkers <- workerAddr
+			wg.Done()
+			registerChan <- workerAddr
 		}()
 	}
 
 	wg.Wait()
+
+	go func() {
+		for {
+			// Avoiding other goroutine stuck on registerChan,
+			// such as forwardRegistrations() or our go func() above.
+			<-registerChan
+			fmt.Println("RegisterChan: drop one worker")
+		}
+	}()
+
 	fmt.Printf("Schedule: %v done\n", phase)
 }
