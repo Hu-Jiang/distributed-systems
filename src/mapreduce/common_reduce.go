@@ -55,9 +55,9 @@ func doReduce(
 	// Your code here (Part I).
 	//
 
-	/// 1. read all content from intermediate file.
-	/// 2. decode it and collect the values of the same key.
-	/// 3. call reduceF() defined by user then write result to output file.
+	/// 1. Read all content from intermediate file.
+	/// 2. Decode it and collect the values of the same key.
+	/// 3. Call reduceF() defined by user then write result to output file.
 
 	keyValues := make(map[string][]string)
 	for i := 0; i < nMap; i++ {

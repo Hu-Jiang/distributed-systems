@@ -59,10 +59,10 @@ func doMap(
 	// Your code here (Part I).
 	//
 
-	/// 1. read input file to memory, create intermediate file wait to write.
-	/// 2. call mapF() defined by user, then call ihash() on each key,
+	/// 1. Read input file to memory, create intermediate file wait to write.
+	/// 2. Call mapF() defined by user, then call ihash() on each key,
 	/// mod nReduce, to pick r for a key/value pair.
-	/// 3. write each r result to each file named by call reduceName().
+	/// 3. Write each r result to each file named by call reduceName().
 
 	contents, err := ioutil.ReadFile(inFile)
 	if err != nil {
