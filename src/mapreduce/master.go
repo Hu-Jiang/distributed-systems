@@ -84,7 +84,7 @@ func Sequential(jobName string, files []string, nreduce int,
 // reads ch to learn about workers.
 func (mr *Master) forwardRegistrations(ch chan string) {
 	i := 0
-	for {
+	for { /// NOTE: this function never return.
 		mr.Lock()
 		if len(mr.workers) > i {
 			// there's a worker that we haven't told schedule() about.
