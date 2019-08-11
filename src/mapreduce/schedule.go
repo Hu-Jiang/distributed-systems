@@ -2,7 +2,6 @@ package mapreduce
 
 import (
 	"fmt"
-	"log"
 	"sync"
 )
 
@@ -57,13 +56,17 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 
 		wg.Add(1)
 		go func() {
-			workerAddr := <-registerChan
-			ok := call(workerAddr, "Worker.DoTask", args, new(struct{}))
-			if ok == false {
-				log.Fatalf("DoTask: RPC %s DoTask error", workerAddr)
+			defer wg.Done()
+			for {
+				workerAddr := <-registerChan
+				ok := call(workerAddr, "Worker.DoTask", args, new(struct{}))
+				if ok == true {
+					go func() { registerChan <- workerAddr }()
+					break
+				}
+
+				fmt.Printf("DoTask: RPC %s DoTask error, will be sheduled to other worker\n", workerAddr)
 			}
-			wg.Done()
-			registerChan <- workerAddr
 		}()
 	}
 
