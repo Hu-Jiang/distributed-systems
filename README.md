@@ -1,2 +1,2 @@
 ### NOTE
-- all comment writed by myself use '///' to distinguish with origin comment. 
+- all comments writed by myself use '///' to distinguish with origin comment. 
